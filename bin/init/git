@@ -2,12 +2,12 @@
 
 gcm='gcm-linux_amd64.2.4.1.tar.gz'
 
-if ! git config --global --get user.email &> /dev/null; then
+if ! git config --global --get user.email &>/dev/null; then
     read -p 'Enter your email: ' email
     git config --global user.email "$email"
 fi
 
-if ! git config --global --get user.name &> /dev/null; then
+if ! git config --global --get user.name &>/dev/null; then
     read -p 'Enter your name: ' name
     git config --global user.name "$name"
 fi
