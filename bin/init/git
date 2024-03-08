@@ -1,0 +1,35 @@
+#!/bin/bash
+
+gcm='gcm-linux_amd64.2.4.1.tar.gz'
+
+if ! git config --global --get user.email &> /dev/null; then
+    read -p 'Enter your email: ' email
+    git config --global user.email "$email"
+fi
+
+if ! git config --global --get user.name &> /dev/null; then
+    read -p 'Enter your name: ' name
+    git config --global user.name "$name"
+fi
+
+wget -q https://github.com/git-ecosystem/git-credential-manager/releases/download/v2.4.1/"$gcm" &&
+    {
+        if ! sudo tar -xvf ./"$gcm" -C /usr/local/bin; then
+            echo 'Failed to extract Git Credential Manager'
+            exit 1
+        fi
+
+        git-credential-manager configure
+
+        git config --global credential.credentialStore cache
+        git config --global credential.guiPrompt false
+
+        echo 'Cleaning up...'
+        rm ./"$gcm"
+
+        echo 'Successfully initialized Git'
+        exit 0
+    }
+
+echo 'Download failed'
+exit 1
