@@ -1,6 +1,6 @@
 # Firefox
 
-Reasonable changes to Firefox default settings.
+Reasonable changes to Firefox's default settings.
 
 ## General
 
