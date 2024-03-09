@@ -189,7 +189,7 @@ local plugins = {
                 vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { buffer = bufnr })
                 vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = bufnr })
                 vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { buffer = bufnr })
-                vim.keymap.set("n", "gr", vim.lsp.buf.references, { buffer = bufnr })
+                vim.keymap.set("n", "gr", require("telescope.builtin").lsp_references, { buffer = bufnr })
                 vim.keymap.set({ "n", "v" }, "<space>ca", vim.lsp.buf.code_action, { buffer = bufnr })
             end)
 
