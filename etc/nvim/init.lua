@@ -254,17 +254,17 @@ local plugins = {
     {
         "Exafunction/codeium.vim",
         config = function()
+            vim.keymap.set("i", "<M-y>", function()
+                return vim.fn["codeium#Accept"]()
+            end, { expr = true })
             vim.keymap.set("i", "<M-e>", function()
                 return vim.fn["codeium#Clear"]()
-            end, { expr = true })
-            vim.keymap.set("i", "<M-n>", function()
-                return vim.fn["codeium#CycleCompletions"](1)
             end, { expr = true })
             vim.keymap.set("i", "<M-p>", function()
                 return vim.fn["codeium#CycleCompletions"](-1)
             end, { expr = true })
-            vim.keymap.set("i", "<M-y>", function()
-                return vim.fn["codeium#Accept"]()
+            vim.keymap.set("i", "<M-n>", function()
+                return vim.fn["codeium#CycleCompletions"](1)
             end, { expr = true })
         end,
         event = "BufEnter",
