@@ -70,14 +70,14 @@ vim.opt.rtp:prepend(lazypath)
 local plugins = {
     {
         "dracula/vim",
-        config = function()
-            vim.cmd.colorscheme("dracula")
-        end,
+        name = "dracula",
+        priority = 1000,
         init = function()
             vim.opt.termguicolors = true
         end,
-        name = "dracula",
-        priority = 1000,
+        config = function()
+            vim.cmd.colorscheme("dracula")
+        end,
     },
     {
         "nvim-treesitter/nvim-treesitter",
@@ -94,49 +94,49 @@ local plugins = {
                 },
                 indent = { enable = true },
             })
-
-            vim.opt.foldmethod = "expr"
-            vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
-            vim.opt.foldenable = false
         end,
     },
     {
         "VonHeikemen/lsp-zero.nvim",
         branch = "v3.x",
+        lazy = true,
         init = function()
             vim.g.lsp_zero_extend_cmp = 0
             vim.g.lsp_zero_extend_lspconfig = 0
         end,
-        lazy = true,
     },
     {
         "williamboman/mason.nvim",
-        config = true,
         lazy = false,
+        config = true,
     },
     {
         "hrsh7th/nvim-cmp",
+        event = "InsertEnter",
+        dependencies = {
+            "L3MON4D3/LuaSnip",
+            "hrsh7th/cmp-buffer",
+            "hrsh7th/cmp-path",
+            "onsails/lspkind.nvim",
+            "rafamadriz/friendly-snippets",
+            "saadparwaiz1/cmp_luasnip",
+        },
         config = function()
             local lsp_zero = require("lsp-zero")
-            lsp_zero.extend_cmp()
-
             local cmp = require("cmp")
             local cmp_action = lsp_zero.cmp_action()
 
             require("luasnip.loaders.from_vscode").lazy_load()
+
+            lsp_zero.extend_cmp()
 
             cmp.setup({
                 preselect = "item",
                 mapping = {
                     ["<C-y>"] = cmp.mapping.confirm({ select = false }),
                     ["<C-e>"] = cmp.mapping.abort(),
-                    ["<C-p>"] = cmp.mapping(function()
-                        if cmp.visible() then
-                            cmp.select_prev_item({ behavior = "insert" })
-                        else
-                            cmp.complete()
-                        end
-                    end),
+                    ["<C-f>"] = cmp_action.luasnip_jump_forward(),
+                    ["<C-b>"] = cmp_action.luasnip_jump_backward(),
                     ["<C-n>"] = cmp.mapping(function()
                         if cmp.visible() then
                             cmp.select_next_item({ behavior = "insert" })
@@ -144,8 +144,13 @@ local plugins = {
                             cmp.complete()
                         end
                     end),
-                    ["<C-f>"] = cmp_action.luasnip_jump_forward(),
-                    ["<C-b>"] = cmp_action.luasnip_jump_backward(),
+                    ["<C-p>"] = cmp.mapping(function()
+                        if cmp.visible() then
+                            cmp.select_prev_item({ behavior = "insert" })
+                        else
+                            cmp.complete()
+                        end
+                    end),
                 },
                 completion = { completeopt = "menu,menuone,noinsert" },
                 formatting = {
@@ -164,32 +169,30 @@ local plugins = {
                 },
             })
         end,
-        dependencies = {
-            "L3MON4D3/LuaSnip",
-            "hrsh7th/cmp-buffer",
-            "hrsh7th/cmp-path",
-            "onsails/lspkind.nvim",
-            "rafamadriz/friendly-snippets",
-            "saadparwaiz1/cmp_luasnip",
-        },
-        event = "InsertEnter",
     },
     {
         "neovim/nvim-lspconfig",
         cmd = { "LspInfo", "LspInstall", "LspStart" },
+        event = { "BufReadPre", "BufNewFile" },
+        dependencies = {
+            "hrsh7th/cmp-nvim-lsp",
+            "williamboman/mason-lspconfig.nvim",
+        },
         config = function()
             local lsp_zero = require("lsp-zero")
+            local telescope = require("telescope.builtin")
+
             lsp_zero.extend_lspconfig()
 
             lsp_zero.on_attach(function(_, bufnr)
                 vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, { buffer = bufnr })
-                vim.keymap.set("n", "<space>D", vim.lsp.buf.type_definition, { buffer = bufnr })
                 vim.keymap.set("n", "<space>rn", vim.lsp.buf.rename, { buffer = bufnr })
                 vim.keymap.set("n", "K", vim.lsp.buf.hover, { buffer = bufnr })
                 vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { buffer = bufnr })
-                vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = bufnr })
-                vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { buffer = bufnr })
-                vim.keymap.set("n", "gr", require("telescope.builtin").lsp_references, { buffer = bufnr })
+                vim.keymap.set("n", "gd", telescope.lsp_definitions, { buffer = bufnr })
+                vim.keymap.set("n", "gi", telescope.lsp_implementations, { buffer = bufnr })
+                vim.keymap.set("n", "gr", telescope.lsp_references, { buffer = bufnr })
+                vim.keymap.set("n", "gt", telescope.lsp_type_definitions, { buffer = bufnr })
                 vim.keymap.set({ "n", "v" }, "<space>ca", vim.lsp.buf.code_action, { buffer = bufnr })
             end)
 
@@ -214,11 +217,6 @@ local plugins = {
                 },
             })
         end,
-        dependencies = {
-            "hrsh7th/cmp-nvim-lsp",
-            "williamboman/mason-lspconfig.nvim",
-        },
-        event = { "BufReadPre", "BufNewFile" },
     },
     {
         "stevearc/oil.nvim",
@@ -229,11 +227,13 @@ local plugins = {
     {
         "nvim-telescope/telescope.nvim",
         branch = "0.1.x",
-        dependencies = { "nvim-lua/plenary.nvim" },
         keys = {
+            { "<Leader>fb", "<CMD>Telescope buffers<CR>" },
             { "<Leader>ff", "<CMD>Telescope find_files<CR>" },
             { "<Leader>fg", "<CMD>Telescope live_grep<CR>" },
+            { "<Leader>fh", "<CMD>Telescope help_tags<CR>" },
         },
+        dependencies = { "nvim-lua/plenary.nvim" },
         opts = {
             defaults = {
                 sorting_strategy = "ascending",
@@ -248,26 +248,28 @@ local plugins = {
     },
     {
         "nvim-lualine/lualine.nvim",
-        config = true,
         dependencies = { "nvim-tree/nvim-web-devicons" },
+        config = true,
     },
     {
         "Exafunction/codeium.vim",
+        event = "BufEnter",
         config = function()
+            vim.g.codeium_disable_bindings = 1
+
             vim.keymap.set("i", "<M-y>", function()
                 return vim.fn["codeium#Accept"]()
             end, { expr = true })
             vim.keymap.set("i", "<M-e>", function()
                 return vim.fn["codeium#Clear"]()
             end, { expr = true })
-            vim.keymap.set("i", "<M-p>", function()
-                return vim.fn["codeium#CycleCompletions"](-1)
-            end, { expr = true })
             vim.keymap.set("i", "<M-n>", function()
                 return vim.fn["codeium#CycleCompletions"](1)
             end, { expr = true })
+            vim.keymap.set("i", "<M-p>", function()
+                return vim.fn["codeium#CycleCompletions"](-1)
+            end, { expr = true })
         end,
-        event = "BufEnter",
     },
     {
         "echasnovski/mini.comment",
